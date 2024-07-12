@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "148760e361203517d9bf0edd997b1163",
+    "content-hash": "b4c17cff5bd0abccd63db0c379af4cb6",
     "packages": [
         {
             "name": "composer/installers",
@@ -1094,6 +1094,24 @@
                 }
             ],
             "time": "2023-11-12T22:43:29+00:00"
+        },
+        {
+            "name": "wpackagist-plugin/wp-file-manager",
+            "version": "7.2.9",
+            "source": {
+                "type": "svn",
+                "url": "https://plugins.svn.wordpress.org/wp-file-manager/",
+                "reference": "trunk"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://downloads.wordpress.org/plugin/wp-file-manager.zip?timestamp=1717738461"
+            },
+            "require": {
+                "composer/installers": "^1.0 || ^2.0"
+            },
+            "type": "wordpress-plugin",
+            "homepage": "https://wordpress.org/plugins/wp-file-manager/"
         },
         {
             "name": "wpackagist-theme/twentytwentyfour",
