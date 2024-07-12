@@ -44,7 +44,7 @@ RUN composer install --no-scripts --no-autoloader --no-dev -vvv
 RUN composer dump-autoload --optimize --no-scripts -vvv
 
 # Stage 3. Configure app
-COPY ./config/nginx/host.conf /etc/nginx/conf.d/default.conf
+COPY ./config/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY ./config/nginx/nginx.conf /etc/nginx/nginx.conf
 ARG NGINX_PORT="8080"
 ARG NGINX_SERVER_NAME="localhost"
