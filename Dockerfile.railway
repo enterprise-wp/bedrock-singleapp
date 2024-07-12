@@ -39,7 +39,6 @@ RUN set -eux; \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 WORKDIR /var/www/app
 COPY ./app .
-RUN rm -rf /var/www/app/web/app/upload
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-scripts --no-autoloader --no-dev -vvv
 RUN composer dump-autoload --optimize --no-scripts -vvv
@@ -54,6 +53,7 @@ RUN sed -i "s|{{NGINX_PORT}}|${NGINX_PORT}|g" /etc/nginx/conf.d/default.conf
 RUN sed -i "s|{{NGINX_SERVER_NAME}}|${NGINX_SERVER_NAME}|g" /etc/nginx/conf.d/default.conf
 RUN sed -i "s|{{FASTCGI_PASS_HOST}}|${FASTCGI_PASS_HOST}|g" /etc/nginx/conf.d/default.conf
 RUN ln -s /dev/stdout /var/log/debug.log
+RUN rm -rf /var/www/app/web/app/uploads
 COPY ./config/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # From Railway env
