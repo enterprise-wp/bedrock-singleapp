@@ -35,6 +35,45 @@ RUN set -eux; \
     err="$(php --version 3>&1 1>&2 2>&3)"; \
     [ -z "$err" ]
 
+
+# see https://www.php.net/manual/en/opcache.installation.php
+# see https://www.php.net/manual/en/opcache.configuration.php
+RUN set -eux; \
+    docker-php-ext-enable opcache; \
+    { \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=4000'; \
+    echo 'opcache.revalidate_freq=2'; \
+    } > /usr/local/etc/php/conf.d/opcache-recommended.ini
+# https://wordpress.org/support/article/editing-wp-config-php/#configure-error-logging
+RUN { \
+    # https://www.php.net/manual/en/errorfunc.constants.php
+    # https://github.com/docker-library/wordpress/issues/420#issuecomment-517839670
+    echo 'error_reporting = E_ERROR | E_WARNING | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_RECOVERABLE_ERROR'; \
+    echo 'display_errors = Off'; \
+    echo 'display_startup_errors = Off'; \
+    echo 'log_errors = On'; \
+    echo 'error_log = /dev/stderr'; \
+    echo 'log_errors_max_len = 1024'; \
+    echo 'ignore_repeated_errors = On'; \
+    echo 'ignore_repeated_source = Off'; \
+    echo 'html_errors = Off'; \
+    } > /usr/local/etc/php/conf.d/error-logging.ini
+
+# taken from mkz71's comment on Wordpress official Docker Hub page
+# https://hub.docker.com/_/wordpress/
+RUN { \
+    echo 'file_uploads = On'; \
+    echo 'memory_limit = 256M'; \
+    echo 'upload_max_filesize = 256M'; \
+    echo 'post_max_size = 300M'; \
+    echo 'max_execution_time = 600'; \
+    } > /usr/local/etc/php/conf.d/uploads.ini
+
+# Any additional settings
+COPY ./config/php/php.ini /usr/local/etc/php/conf.d/app-php.ini
+
 # Stage 2. Install app
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 WORKDIR /var/www/app
@@ -52,8 +91,9 @@ ARG FASTCGI_PASS_HOST="localhost"
 RUN sed -i "s|{{NGINX_PORT}}|${NGINX_PORT}|g" /etc/nginx/conf.d/default.conf
 RUN sed -i "s|{{NGINX_SERVER_NAME}}|${NGINX_SERVER_NAME}|g" /etc/nginx/conf.d/default.conf
 RUN sed -i "s|{{FASTCGI_PASS_HOST}}|${FASTCGI_PASS_HOST}|g" /etc/nginx/conf.d/default.conf
-RUN ln -s /dev/stdout /var/log/debug.log
-RUN rm -rf /var/www/app/web/app/uploads
+# RUN rm -rf /var/www/app/web/app/uploads
+RUN chmod +w /var/www/app/web/app/uploads
+RUN mkdir -p /var/log/supervisord
 COPY ./config/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # From Railway env
@@ -73,15 +113,14 @@ ARG LOGGED_IN_SALT
 ARG NONCE_SALT
 
 # For Wordpress
-ARG WP_HOME="https://${RAILWAY_PUBLIC_DOMAIN}"
-ARG WP_SITEURL="${WP_HOME}/wp"
+ARG WP_ENV
+ARG WP_HOME
+ARG WP_SITEURL
 
-ENV WP_ENV=${RAILWAY_ENVIRONMENT_NAME} \
-    WP_HOME=${WP_HOME} \
-    WP_SITEURL=${WP_SITEURL} \
-    FORCE_SSL_ADMIN=true \
+ENV WP_ENV=${WP_ENV} \
+    WP_HOME=${WP_HOME}\
+    WP_SITEURL="${WP_SITEURL}" \
     DATABASE_URL=${DATABASE_URL} \
-    DB_PREFIX="wp_" \
     AUTH_KEY=${AUTH_KEY} \
     SECURE_AUTH_KEY=${SECURE_AUTH_KEY} \
     LOGGED_IN_KEY=${LOGGED_IN_KEY} \
@@ -89,8 +128,10 @@ ENV WP_ENV=${RAILWAY_ENVIRONMENT_NAME} \
     AUTH_SALT=${AUTH_SALT} \
     SECURE_AUTH_SALT=${SECURE_AUTH_SALT} \
     LOGGED_IN_SALT=${LOGGED_IN_SALT} \
-    NONCE_SALT=${NONCE_SALT}
+    NONCE_SALT=${NONCE_SALT} \
+    FORCE_SSL_ADMIN=true \
+    DB_PREFIX="wp_"
 
 EXPOSE 9000 8080
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf", "-l", "syslog"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
