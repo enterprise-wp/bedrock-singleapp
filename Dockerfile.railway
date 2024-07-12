@@ -39,6 +39,7 @@ RUN set -eux; \
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 WORKDIR /var/www/app
 COPY ./app .
+RUN rm -rf /var/www/app/web/app/upload
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --no-scripts --no-autoloader --no-dev -vvv
 RUN composer dump-autoload --optimize --no-scripts -vvv
