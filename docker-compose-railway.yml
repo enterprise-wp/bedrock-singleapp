@@ -1,0 +1,49 @@
+# Not used on production. For testing that this works ahead of deployment.
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile.railway
+      args:
+        RAILWAY_SERVICE_NAME: railway-production-for-testing
+        RAILWAY_ENVIRONMENT_NAME: production
+        RAILWAY_PUBLIC_DOMAIN: localhost:8080
+        DATABASE_URL: mysql://user:password@db:3306/mydatabase
+        RAILWAY_RUN_UID: "0"
+        WP_ENV: production
+        WP_HOME: "http://localhost:8080"
+        WP_SITEURL: "http://localhost:8080/wp"
+        AUTH_KEY: "PPC!4V}NT`X>(fIK0z%_zl(b8aEx(<Xh|8Wt{B@o{)dPjEH(Gh#fbChSFg>`9eu&"
+        SECURE_AUTH_KEY: "[8R.zsbD@s8Of+;>FLwY4p_Nj#GV*ioaRt!qJCA1>:J8.Eu3TyhO`rJua<NC@jFp"
+        LOGGED_IN_KEY: "i-m^2O4J<+cFJMCm@U!Z7i2U--Eg-J4?F<Z-7WxypDA_cb[:L.<_mK*BO/fi_%A#"
+        NONCE_KEY: "q%q48?Fbb)E(33T3@>?3+52LP!n@UTdMB1rI.*fB:tsikZ|g<)5<jr:zLlY0E1T>"
+        AUTH_SALT: ":9K;#Yz>z8jOgtKFXuBwS/xk^?<Df-?,jq:3k/-&6Gp:KrE(rF[#?hr{3Ey1_}i#"
+        SECURE_AUTH_SALT: ".R&&C;<t7qrR2&U.7e5JnG?]J]m(C$-AgZ}|;s3Ef5t`4iBrzdcQzxojDu7;4fCP"
+        LOGGED_IN_SALT: "Pi+]<_eY)8%b>_2.b}DiZR9B-d7qM!8w:|SHpgbl]RdHovfonOR(ROc^|(fF8Kq!"
+        NONCE_SALT: "X-iY01LSbSvkAOB;5I!rf48^-WWe4|>O?5vPty[Se%t&ei>8EU-puwB:Oa2wF#D3"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - local-network
+
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydatabase
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - local-network
+
+networks:
+  local-network:
+    driver: bridge

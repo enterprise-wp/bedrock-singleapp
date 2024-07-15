@@ -1,6 +1,5 @@
-
 # Stage 1. Install dependencies
-FROM php:8.3.0-fpm-alpine AS php-fpm
+FROM php:8.3.9-fpm-alpine AS php-fpm
 RUN set -eux; \
     apk --update add --no-cache --virtual .build-deps \
     $PHPIZE_DEPS \
@@ -47,7 +46,7 @@ RUN set -eux; \
     echo 'opcache.revalidate_freq=2'; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 # https://wordpress.org/support/article/editing-wp-config-php/#configure-error-logging
-RUN { \
+RUN set -eux; { \
     # https://www.php.net/manual/en/errorfunc.constants.php
     # https://github.com/docker-library/wordpress/issues/420#issuecomment-517839670
     echo 'error_reporting = E_ERROR | E_WARNING | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_RECOVERABLE_ERROR'; \
@@ -85,16 +84,9 @@ RUN composer dump-autoload --optimize --no-scripts -vvv
 # Stage 3. Configure app
 COPY ./config/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY ./config/nginx/nginx.conf /etc/nginx/nginx.conf
-ARG NGINX_PORT="8080"
-ARG NGINX_SERVER_NAME="localhost"
 ARG FASTCGI_PASS_HOST="localhost"
-RUN sed -i "s|{{NGINX_PORT}}|${NGINX_PORT}|g" /etc/nginx/conf.d/default.conf
-RUN sed -i "s|{{NGINX_SERVER_NAME}}|${NGINX_SERVER_NAME}|g" /etc/nginx/conf.d/default.conf
 RUN sed -i "s|{{FASTCGI_PASS_HOST}}|${FASTCGI_PASS_HOST}|g" /etc/nginx/conf.d/default.conf
 RUN sed -i "s|'path' => \$path|'path' => '/var/www/app/web/app/uploads'|g" /var/www/app/web/app/plugins/wp-file-manager/file_folder_manager.php
-RUN rm -rf /var/www/app/web/app/uploads
-RUN mkdir -p /var/log/supervisord
-COPY ./config/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # From Railway env
 ARG RAILWAY_SERVICE_NAME
@@ -136,4 +128,23 @@ ENV WP_ENV=${WP_ENV} \
 
 EXPOSE 9000 8080
 
+RUN set -eux; \
+    echo "WP_ENV=${WP_ENV}" && \
+    echo "WP_HOME=${WP_HOME}" && \
+    echo "WP_SITEURL=${WP_SITEURL}" && \
+    echo "DATABASE_URL=${DATABASE_URL}" && \
+    echo "RAILWAY_RUN_UID=${RAILWAY_RUN_UID}" && \
+    echo "AUTH_KEY=${AUTH_KEY}" && \
+    echo "SECURE_AUTH_KEY=${SECURE_AUTH_KEY}" && \
+    echo "LOGGED_IN_KEY=${LOGGED_IN_KEY}" && \
+    echo "NONCE_KEY=${NONCE_KEY}" && \
+    echo "AUTH_SALT=${AUTH_SALT}" && \
+    echo "SECURE_AUTH_SALT=${SECURE_AUTH_SALT}" && \
+    echo "LOGGED_IN_SALT=${LOGGED_IN_SALT}" && \
+    echo "NONCE_SALT=${NONCE_SALT}" && \
+    echo "FORCE_SSL_ADMIN=${FORCE_SSL_ADMIN}" && \
+    echo "DB_PREFIX=${DB_PREFIX}"
+
+RUN mkdir -p /var/log/supervisord
+COPY ./config/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
