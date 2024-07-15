@@ -41,7 +41,13 @@
     "roots/wp-config": "1.0.0",
     "roots/wp-password-bcrypt": "1.1.0",
     "wpackagist-theme/twentytwentyfour": "^1.0",
-    "wpackagist-plugin/wp-file-manager": "^7.2"
+    "wpackagist-plugin/wp-file-manager": "^7.2",
+    "roots/wp-stage-switcher": "^2.2",
+    "wpackagist-plugin/connections": "^10.4",
+    "wpackagist-plugin/wordpress-seo": "^23.0",
+    "wpackagist-plugin/jetpack": "^13.6",
+    "wpackagist-plugin/wordfence": "^7.11",
+    "wpackagist-plugin/fluent-smtp": "^2.2"
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "^3.7.1",
