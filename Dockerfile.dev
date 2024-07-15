@@ -1,0 +1,12 @@
+FROM nginx:stable-alpine
+COPY config/nginx/host.conf /etc/nginx/conf.d/default.conf
+COPY config/nginx/nginx.conf /etc/nginx/nginx.conf
+ARG UPSTREAM_APP_HOST
+ENV UPSTREAM_APP_HOST=${UPSTREAM_APP_HOST}
+RUN echo "UPSTREAM_APP_HOST=${UPSTREAM_APP_HOST}"
+RUN sed -i "s|{{UPSTREAM_APP_HOST}}|${UPSTREAM_APP_HOST}|g" /etc/nginx/conf.d/default.conf
+
+# supervisord
+RUN mkdir -p /var/log/supervisord
+COPY ./config/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
